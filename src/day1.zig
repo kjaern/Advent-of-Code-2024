@@ -89,7 +89,6 @@ fn similarity(array1: []u32, array2: []u32) u32 {
         if (index < array2.len and itm < array2[index]) {
             repeats = 0;
         } else if (i < array1.len - 1 and itm == array1[i + 1]) {
-            std.debug.print("same value == {} {}\n", .{ itm, array1[i + 1] });
             repeatsLeft = repeatsLeft + 1;
         } else {
             repeats = 0;
@@ -108,6 +107,7 @@ fn similarity(array1: []u32, array2: []u32) u32 {
     }
     return score;
 }
+
 test "Day 1 test part 1" {
     const file_path = "data/day1_test.txt";
     const data = try utils.readData(file_path);
@@ -118,6 +118,7 @@ test "Day 1 test part 1" {
 }
 
 test "Day 2 test part 2" {
+    std.debug.print("test 2 dag 1", .{});
     const file_path = "data/day1_test.txt";
     const data = try utils.readData(file_path);
     defer allocator.free(data);
