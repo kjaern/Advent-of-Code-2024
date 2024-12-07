@@ -18,6 +18,17 @@ pub fn main() !void {
     const data = try utils.readData(file_path);
     defer allocator.free(data);
 
+    const arrays = try prepData(data);
+
+    const dist = distance(arrays.a1, arrays.a2);
+    const score = similarity(arrays.a1, arrays.a2);
+    std.debug.print("dist = {}\n", .{dist});
+    std.debug.print("score = {}\n", .{score});
+}
+
+const Arrays = struct { a1: []u32, a2: []u32 };
+
+fn prepData(data: []u8) !Arrays {
     var iter = std.mem.split(u8, data, "\r\n");
     var list1 = std.ArrayList(u32).init(allocator);
     var list2 = std.ArrayList(u32).init(allocator);
@@ -49,12 +60,14 @@ pub fn main() !void {
 
     std.mem.sort(u32, array1, {}, comptime std.sort.asc(u32));
     std.mem.sort(u32, array2, {}, comptime std.sort.asc(u32));
-
-    distance(array1, array2);
-    similarity(array1, array2);
+    const arrays = Arrays{
+        .a1 = array1,
+        .a2 = array2,
+    };
+    return arrays;
 }
 
-fn distance(array1: []u32, array2: []u32) void {
+fn distance(array1: []u32, array2: []u32) u32 {
     var dist: u32 = 0;
     for (array1, array2) |itm1, itm2| {
         if (itm1 < itm2) {
@@ -63,24 +76,22 @@ fn distance(array1: []u32, array2: []u32) void {
             dist = dist + itm1 - itm2;
         }
     }
-    std.debug.print("dist = {}\n", .{dist});
+    return dist;
 }
 
-fn similarity(array1: []u32, array2: []u32) void {
+fn similarity(array1: []u32, array2: []u32) u32 {
     var index: u32 = 0;
     var repeats: u32 = 0;
     var repeatsLeft: u32 = 1;
     var score: u32 = 0;
-    var previous: u32 = 0;
 
-    for (array1) |itm| {
+    for (array1, 0..) |itm, i| {
         if (index < array2.len and itm < array2[index]) {
-            previous = itm;
             repeats = 0;
-        } else if (previous == itm) {
+        } else if (i < array1.len - 1 and itm == array1[i + 1]) {
+            std.debug.print("same value == {} {}\n", .{ itm, array1[i + 1] });
             repeatsLeft = repeatsLeft + 1;
         } else {
-            previous = itm;
             repeats = 0;
             while (index < array2.len and itm >= array2[index]) {
                 if (itm == array2[index]) {
@@ -95,5 +106,22 @@ fn similarity(array1: []u32, array2: []u32) void {
             repeatsLeft = 1;
         }
     }
-    std.debug.print("score = {}\n", .{score});
+    return score;
+}
+test "Day 1 test part 1" {
+    const file_path = "data/day1_test.txt";
+    const data = try utils.readData(file_path);
+    defer allocator.free(data);
+    const arrays = try prepData(data);
+    const dist = distance(arrays.a1, arrays.a2);
+    try std.testing.expectEqual(@as(u32, 11), dist);
+}
+
+test "Day 2 test part 2" {
+    const file_path = "data/day1_test.txt";
+    const data = try utils.readData(file_path);
+    defer allocator.free(data);
+    const arrays = try prepData(data);
+    const score = similarity(arrays.a1, arrays.a2);
+    try std.testing.expectEqual(@as(u32, 31), score);
 }
